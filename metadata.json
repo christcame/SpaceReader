@@ -1,5 +1,5 @@
 {
-  "name": "Galactic Speed Reader",
-  "description": "An immersive speed-reading application with a customizable, animated starfield background. Upload your own text, adjust reading speed, font, and size for a personalized experience.",
+  "name": "SpaceReader",
+  "description": "An immersive speed-reading application with a customizable background. Upload your own text, adjust reading speed, font, and size for a personalized experience.",
   "requestFramePermissions": []
 }

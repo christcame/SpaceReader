@@ -5,6 +5,7 @@ import { IconButton } from './components/IconButton';
 import { SettingsMenu } from './components/SettingsMenu';
 import { UploadIcon, ExportIcon, PauseIcon, PlayIcon, SettingsIcon, ShareIcon } from './components/icons';
 import { DEFAULT_STORY, FONT_OPTIONS, BACKGROUND_OPTIONS } from './constants';
+import { NEW_STORY_PROMPT } from './env';
 import type { FontOption, BackgroundOption } from './types';
 
 const App: React.FC = () => {
@@ -17,7 +18,7 @@ const App: React.FC = () => {
     const [font, setFont] = useState<FontOption>(FONT_OPTIONS[0]);
     const [textColor, setTextColor] = useState('#ffc200');
     const [backgroundOption, setBackgroundOption] = useState<BackgroundOption>(BACKGROUND_OPTIONS[0]);
-    const [filename, setFilename] = useState("Default Story");
+    const [filename, setFilename] = useState("SpaceReader");
     const [isMenuVisible, setIsMenuVisible] = useState(false);
     const [isTextVisible, setIsTextVisible] = useState(true);
     const [isGenerating, setIsGenerating] = useState(false);
@@ -49,14 +50,14 @@ const App: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        const newChunks = chunkText(fullStoryText, 40, fontSize, 150);
+        const newChunks = chunkText(fullStoryText, 40, fontSize, 75);
         setChunks(newChunks);
         if (currentChunkIndex >= newChunks.length) {
             setCurrentChunkIndex(Math.max(0, newChunks.length - 1));
         }
     }, [fullStoryText, fontSize, chunkText, currentChunkIndex]);
 
-    const processAndSetText = useCallback((text: string, newFilename = "Default Story") => {
+    const processAndSetText = useCallback((text: string, newFilename = "SpaceReader") => {
         const cleanedText = text.replace(/\n/g, ' ').replace(/\s+/g, ' ');
         setFullStoryText(cleanedText);
         setFilename(newFilename);
@@ -200,7 +201,7 @@ const App: React.FC = () => {
     };
     
     const handleShare = () => {
-        const text = encodeURIComponent("Check out this awesome speed reading app!");
+        const text = encodeURIComponent("Check out this awesome reading app!\n");
         const url = encodeURIComponent(window.location.href);
         window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
     };
@@ -213,7 +214,7 @@ const App: React.FC = () => {
         setIsGenerating(true);
         try {
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-            const prompt = "Write a short, compelling story with a clear beginning, middle, and end. The story can be any genre. Provide the response as a JSON object with a 'title' (string) and a 'story' (string) field. The story should be a single block of plain text without any markdown formatting.";
+            const prompt = NEW_STORY_PROMPT;
             
             const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',

@@ -1,12 +1,14 @@
 
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { IconButton } from './components/IconButton';
 import { SettingsMenu } from './components/SettingsMenu';
-import { UploadIcon, ExportIcon, PauseIcon, PlayIcon, SettingsIcon, ShareIcon } from './components/icons';
+import { PauseIcon, PlayIcon, SettingsIcon, NextIcon, PreviousIcon } from './components/icons';
 import { DEFAULT_STORY, FONT_OPTIONS, BACKGROUND_OPTIONS } from './constants';
 import { NEW_STORY_PROMPT } from './env';
 import type { FontOption, BackgroundOption } from './types';
+import { logData, logText } from './services/tracking';
 
 const App: React.FC = () => {
     const [fullStoryText, setFullStoryText] = useState('');
@@ -14,10 +16,10 @@ const App: React.FC = () => {
     const [currentChunkIndex, setCurrentChunkIndex] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
     const [readingSpeed, setReadingSpeed] = useState(3000); // ms
-    const [fontSize, setFontSize] = useState(40); // px
-    const [font, setFont] = useState<FontOption>(FONT_OPTIONS[0]);
+    const [fontSize, setFontSize] = useState(60); // px
+    const [font, setFont] = useState<FontOption>(FONT_OPTIONS.find(f => f.name === 'Raleway') || FONT_OPTIONS[0]);
     const [textColor, setTextColor] = useState('#ffc200');
-    const [backgroundOption, setBackgroundOption] = useState<BackgroundOption>(BACKGROUND_OPTIONS[0]);
+    const [backgroundOption, setBackgroundOption] = useState<BackgroundOption>(BACKGROUND_OPTIONS.find(b => b.name === 'Sunset Blaze') || BACKGROUND_OPTIONS[0]);
     const [filename, setFilename] = useState("SpaceReader");
     const [isMenuVisible, setIsMenuVisible] = useState(false);
     const [isTextVisible, setIsTextVisible] = useState(true);
@@ -26,8 +28,14 @@ const App: React.FC = () => {
     const autoAdvanceTimer = useRef<number | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const sentenceRef = useRef<HTMLParagraphElement>(null);
-    const menuRef = useRef<HTMLDivElement>(null);
-    const settingsButtonRef = useRef<HTMLButtonElement>(null);
+
+    useEffect(() => {
+        const logVisit = async () => {
+            // On initial load, perform identity resolution and log the visit.
+            await logData({ event: 'visit' });
+        };
+        logVisit();
+    }, []);
 
     const chunkText = useCallback((text: string, baseFontSize: number, currentFontSize: number, baseChars: number): string[] => {
         if (!text) return [];
@@ -57,40 +65,30 @@ const App: React.FC = () => {
         }
     }, [fullStoryText, fontSize, chunkText, currentChunkIndex]);
 
-    const processAndSetText = useCallback((text: string, newFilename = "SpaceReader") => {
+    const processAndSetText = useCallback(async (text: string, newFilename = "SpaceReader", shouldLogText = false) => {
         const cleanedText = text.replace(/\n/g, ' ').replace(/\s+/g, ' ');
         setFullStoryText(cleanedText);
         setFilename(newFilename);
         setCurrentChunkIndex(0);
         setIsPaused(false);
         setIsMenuVisible(false);
+
+        // Log the tracking event.
+        await logData({
+            event: 'setText',
+            source: newFilename,
+        });
+
+        if (shouldLogText) {
+            // Log the full text content to its dedicated storage.
+            await logText(newFilename, cleanedText);
+        }
     }, []);
 
     useEffect(() => {
         processAndSetText(DEFAULT_STORY);
     }, [processAndSetText]);
     
-    // "Click outside to close" logic for settings menu
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (
-                isMenuVisible &&
-                menuRef.current &&
-                !menuRef.current.contains(event.target as Node) &&
-                settingsButtonRef.current &&
-                !settingsButtonRef.current.contains(event.target as Node)
-            ) {
-                setIsMenuVisible(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [isMenuVisible]);
-
-
     const displayChunk = useCallback((index: number) => {
         setIsTextVisible(false);
         setTimeout(() => {
@@ -100,11 +98,13 @@ const App: React.FC = () => {
     }, []);
 
     const displayNextChunk = useCallback(() => {
-        displayChunk((currentChunkIndex + 1) % (chunks.length || 1));
+        if (chunks.length === 0) return;
+        displayChunk((currentChunkIndex + 1) % chunks.length);
     }, [currentChunkIndex, chunks.length, displayChunk]);
 
     const displayPreviousChunk = useCallback(() => {
-        displayChunk((currentChunkIndex - 1 + chunks.length) % (chunks.length || 1));
+        if (chunks.length === 0) return;
+        displayChunk((currentChunkIndex - 1 + chunks.length) % chunks.length);
     }, [currentChunkIndex, chunks.length, displayChunk]);
     
     useEffect(() => {
@@ -128,6 +128,12 @@ const App: React.FC = () => {
             return !prev;
         });
     }, [chunks, currentChunkIndex]);
+    
+    const handleScreenClick = () => {
+        if (!isPaused) {
+            displayNextChunk();
+        }
+    };
 
     const handleKeydown = useCallback((e: KeyboardEvent) => {
         const activeElement = document.activeElement as HTMLElement;
@@ -182,10 +188,12 @@ const App: React.FC = () => {
         if (file) {
             const reader = new FileReader();
             reader.onload = (event) => {
-                processAndSetText(event.target?.result as string, file.name);
+                processAndSetText(event.target?.result as string, file.name, true);
             };
             reader.readAsText(file);
         }
+        // Reset file input to allow re-uploading the same file
+        e.target.value = '';
     };
 
     const handleExport = () => {
@@ -235,7 +243,7 @@ const App: React.FC = () => {
             const responseText = response.text;
             if (responseText) {
                 const storyData = JSON.parse(responseText);
-                processAndSetText(storyData.story, storyData.title);
+                await processAndSetText(storyData.story, storyData.title);
             } else {
                 throw new Error("Received an empty response from the AI.");
             }
@@ -252,63 +260,80 @@ const App: React.FC = () => {
 
     return (
         <div 
-            className="h-screen w-screen font-mono text-center flex justify-center items-center transition-colors duration-1000"
-            style={{ backgroundColor: backgroundOption.color }}
+            className="h-screen w-screen font-mono text-center flex justify-center items-center overflow-hidden"
+            style={{ background: backgroundOption.gradient }}
+            onClick={handleScreenClick}
         >
-            <div className="absolute top-5 left-1/2 -translate-x-1/2 text-lg text-amber-400/60 z-20 whitespace-nowrap px-4">
-                {filename}
+            <div 
+                className="absolute inset-0 flex flex-col justify-between p-4 sm:p-6 z-20 pointer-events-none"
+            >
+                {/* Top bar */}
+                <div className="flex justify-between items-center w-full pointer-events-auto">
+                    <h1 className="text-lg text-amber-400/60 whitespace-nowrap px-4 truncate max-w-[calc(100%-60px)]">{filename}</h1>
+                     <IconButton ariaLabel="Open Settings" onClick={() => setIsMenuVisible(v => !v)}>
+                        <SettingsIcon />
+                    </IconButton>
+                </div>
+                
+                {/* Bottom bar */}
+                <div className="w-full max-w-3xl mx-auto flex flex-col items-center gap-3 pointer-events-auto" onClick={e => e.stopPropagation()}>
+                    <div className="text-sm sm:text-base text-amber-400/60 w-full flex justify-between px-1">
+                        <span>{Math.round(60000 / readingSpeed)} WPM</span>
+                        <span>{chunks.length > 0 ? currentChunkIndex + 1 : 0} / {chunks.length}</span>
+                    </div>
+                    <input 
+                        type="range" 
+                        min="0" 
+                        max={chunks.length > 0 ? chunks.length - 1 : 0} 
+                        value={currentChunkIndex}
+                        onChange={handleSliderChange}
+                        style={{ background: sliderBackground }}
+                        className="w-full"
+                        disabled={chunks.length <= 1}
+                    />
+                     <div className="flex items-center justify-center gap-2 sm:gap-4 w-full mt-1">
+                         <IconButton ariaLabel="Previous Chunk" onClick={displayPreviousChunk}>
+                             <PreviousIcon />
+                         </IconButton>
+                         <IconButton ariaLabel={isPaused ? "Play" : "Pause"} onClick={togglePause} className="w-16 h-16">
+                             {isPaused ? <PlayIcon /> : <PauseIcon />}
+                         </IconButton>
+                         <IconButton ariaLabel="Next Chunk" onClick={displayNextChunk}>
+                             <NextIcon />
+                         </IconButton>
+                     </div>
+                </div>
             </div>
+
 
             <div className="relative z-10 p-8 max-w-[90%] flex justify-center items-center animate-pulse-custom">
                 <p
                     ref={sentenceRef}
-                    className={`transition-opacity duration-300 ease-in-out cursor-default text-4xl md:text-5xl lg:text-6xl font-bold text-shadow-blur ${isTextVisible ? 'opacity-100' : 'opacity-0'}`}
+                    className={`transition-opacity duration-300 ease-in-out cursor-default text-4xl md:text-5xl lg:text-6xl font-bold ${isTextVisible ? 'opacity-100' : 'opacity-0'}`}
                     style={{ 
                         fontFamily: font.value, 
                         fontSize: `${fontSize}px`,
                         color: textColor,
+                        textShadow: `2px 2px 8px ${backgroundOption.shadowColor}`,
                     }}
                     contentEditable={isPaused}
                     suppressContentEditableWarning={true}
+                    onClick={e => e.stopPropagation()} // Prevent advancing when clicking to edit
                 >
                     {chunks[currentChunkIndex] || ''}
                 </p>
             </div>
+            
+            <input type="file" ref={fileInputRef} onChange={handleFileImport} accept=".txt" className="hidden" />
 
-            <div className="absolute top-5 left-5 z-20">
-                <IconButton ariaLabel="Import Text File" onClick={() => fileInputRef.current?.click()}>
-                    <UploadIcon />
-                </IconButton>
-                <input type="file" ref={fileInputRef} onChange={handleFileImport} accept=".txt" className="hidden" />
-            </div>
-
-            <div className="absolute top-5 right-5 z-20">
-                <IconButton ariaLabel="Export Text File" onClick={handleExport}>
-                    <ExportIcon />
-                </IconButton>
-            </div>
-
-            <div className="absolute bottom-5 right-5 z-20">
-                <button 
-                    aria-label="Share on X" 
-                    onClick={handleShare}
-                    className="cursor-pointer w-10 h-10 bg-transparent border border-amber-400 rounded-lg flex justify-center items-center opacity-60 hover:opacity-90 transition-all hover:scale-105"
-                >
-                    <ShareIcon />
-                </button>
-            </div>
-
-            <div className="absolute bottom-5 left-5 z-20 flex gap-2.5">
-                <IconButton ariaLabel={isPaused ? "Play" : "Pause"} onClick={togglePause}>
-                    {isPaused ? <PlayIcon /> : <PauseIcon />}
-                </IconButton>
-                <IconButton ref={settingsButtonRef} ariaLabel="Open Settings" onClick={() => setIsMenuVisible(!isMenuVisible)}>
-                    <SettingsIcon />
-                </IconButton>
-            </div>
+            {isMenuVisible && (
+                <div 
+                    className="absolute inset-0 bg-black/50 z-30"
+                    onClick={() => setIsMenuVisible(false)}
+                />
+            )}
 
             <SettingsMenu 
-                ref={menuRef}
                 isVisible={isMenuVisible}
                 font={font}
                 onFontChange={setFont}
@@ -322,23 +347,11 @@ const App: React.FC = () => {
                 onBackgroundChange={setBackgroundOption}
                 isGenerating={isGenerating}
                 onGenerateStory={handleGenerateStory}
+                onImportClick={() => fileInputRef.current?.click()}
+                onExport={handleExport}
+                onShare={handleShare}
             />
 
-            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 flex flex-col gap-2.5 items-center w-4/5 max-w-xl">
-                <input 
-                    type="range" 
-                    min="0" 
-                    max={chunks.length > 0 ? chunks.length - 1 : 0} 
-                    value={currentChunkIndex}
-                    onChange={handleSliderChange}
-                    style={{ background: sliderBackground }}
-                    className="w-full"
-                    disabled={chunks.length <= 1}
-                />
-                <div className="text-lg text-amber-400/50 whitespace-nowrap">
-                    Press spacebar to advance
-                </div>
-            </div>
         </div>
     );
 };

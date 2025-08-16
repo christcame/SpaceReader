@@ -1,20 +1,8 @@
 
+
 import type { FontOption, BackgroundOption } from './types';
 
-export const DEFAULT_STORY = `
-The crash left them on an island no map had ever recorded, a sun-bleached expanse of sand and silent palms.
-Eleanor, the older sister, clung to a piece of fuselage, while her brother, Finn, stared blankly at the wreckage.
-Their shared history was a fragile thing, fractured by years of unspoken resentments and distance.
-Now, with no one else to turn to, that distance evaporated, replaced by a suffocating, inescapable intimacy.
-Each day was a battle against the elements and against the ghosts of their past.
-Finn, once the irresponsible younger brother, became the provider, hunting for meager food and freshwater.
-Eleanor, who had always been a protector, found herself relying on him completely, a role reversal that chafed at her pride.
-They spoke little, their communication shifting to a silent language of shared survival.
-A single glance across the smoky fire conveyed more than a year of conversation had ever managed.
-They were two halves of a whole, forged by circumstance, their shared existence on the island blurring the lines of their relationship.
-As the weeks turned into months, they became something new and unnamed, their bond a tangled knot of love, dependency, and desperation.
-The island was their prison, but it was also their world, and in its solitude, they found a connection that was both beautiful and terrifying.
-`;
+export const DEFAULT_STORY = `Barkley was a golden retriever of impeccable breeding and even more impeccable manners. His days were a rhythmic waltz of morning walks, mid-day naps on a sunbeam, and evenings spent retrieving tennis balls for a boy named Leo. Life was good, filled with the simple pleasures of belly rubs and the smell of roasting chicken. But then, the world shifted. A new baby arrived, and with it, a chaos that Barkley could not understand. The walks grew shorter, the belly rubs ceased, and his prized tennis ball was chewed to a slobbery pulp by a teetotaling infant. One rainy afternoon, a new fence went up, and Barkley, in a moment of puppy-like rebellion, decided to see what was on the other side. He never found his way back. Days turned into weeks. The soft beds and bowls of kibble were replaced by cold alleys and the scrounging for scraps. His golden coat became matted and dirty, and his once-unshakeable optimism faded into a weary pragmatism. He learned to be a survivor. He learned the value of a perfectly timed sprint past a street vendor and the art of looking particularly pathetic to a kind-hearted stranger. But kindness, he found, was a finite resource. One night, shivering beneath a cardboard box, he watched a news report flickering from a laundromat window. It was a story about the city's largest bank, which had just installed a state-of-the-art security system. The anchor described it as "impenetrable." Barkley watched as a sleek, silver vault door was showcased, its hinges as wide as his head. A new thought, both audacious and desperate, began to form in his mind. He spent the next few weeks casing the place. He discovered the janitor’s routine, the precise moment the security guard changed shifts, and the fact that the bank's ventilation system was conveniently located at dog-level. His plan was simple and relied on his most innate skill: retrieving. On the night of the heist, Barkley donned a pair of old thermal socks he had "borrowed" from a clothesline, pulling them over his paws to muffle his movements. He slipped through the ventilation duct, the metallic scent of dust and desperation filling his nostrils. Inside, the bank was a maze of desks and empty cubicles, but Barkley moved with the silent focus of a predator. He located the vault, a massive thing of steel and secrets. The anchor had been right; it was impenetrable. But Barkley's plan wasn't to break in. It was to use the bank's own systems against it. He found the tellers' stations and, with a few well-placed nudges, sent a stack of loose bills fluttering to the floor. The bills, he knew, would trigger the motion sensors he had seen earlier in the week, but not the vault's alarm system. The security camera, however, would still see everything. A few minutes later, the alarm blared. Barkley, his mission complete, trotted back through the vents, a single dollar bill clutched triumphantly in his mouth. He was a retriever, after all. The next morning, the headlines screamed, "Mystery Thief Steals a Single Dollar from the First National Bank." The police, baffled, scoured the building for a clue, finding only a few small, muddy paw prints leading away from the ventilation shaft. Barkley, meanwhile, sat on a sunny park bench, a warm bagel in his paws. He was a bank robber now, a criminal mastermind, and he had learned that the difference between a dog on the street and a dog with a purpose was often just a matter of a few well-chosen moves.`;
 
 export const FONT_OPTIONS: FontOption[] = [
     // Monospace Fonts
@@ -58,10 +46,10 @@ export const FONT_OPTIONS: FontOption[] = [
 ];
 
 export const BACKGROUND_OPTIONS: BackgroundOption[] = [
-    { name: 'Deep Space', color: '#000000' },
-    { name: 'Emerald Sea', color: '#013220' },
-    { name: 'Cosmic Fusion', color: '#1c0f3a' },
-    { name: 'Midnight Dusk', color: '#2c3e50' },
-    { name: 'Sunset Orange', color: '#e67e22' },
-    { name: 'Ocean Deep', color: '#000046' },
+    { name: 'Deep Space', gradient: 'linear-gradient(170deg, #030426 0%, #080D42 50%, #0F0F26 100%)', shadowColor: 'rgba(0, 0, 0, 0.75)' },
+    { name: 'Emerald Sea', gradient: 'radial-gradient(circle, #013220, #025940, #038060)', shadowColor: 'rgba(0, 0, 0, 0.75)' },
+    { name: 'Cosmic Fusion', gradient: 'linear-gradient(135deg, #1c0f3a, #4a1c59, #87255B, #B42C4B)', shadowColor: 'rgba(0, 0, 0, 0.75)' },
+    { name: 'Midnight Dusk', gradient: 'linear-gradient(to top, #2c3e50, #34495e, #2c3e50)', shadowColor: 'rgba(0, 0, 0, 0.75)' },
+    { name: 'Sunset Blaze', gradient: 'linear-gradient(45deg, #e67e22, #d35400, #c0392b, #8e44ad)', shadowColor: 'rgba(0, 0, 0, 0.75)' },
+    { name: 'Oceanic Wonder', gradient: 'linear-gradient(180deg, #000046, #1CB5E0, #000046)', shadowColor: 'rgba(0, 0, 0, 0.75)' },
 ];

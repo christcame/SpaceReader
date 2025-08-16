@@ -15,7 +15,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
                 ref={ref}
                 onClick={onClick}
                 aria-label={ariaLabel}
-                className={`cursor-pointer w-10 h-10 bg-amber-400 rounded-lg flex justify-center items-center opacity-50 hover:opacity-70 transition-all shadow-lg shadow-amber-400/50 hover:scale-105 ${className}`}
+                className={`cursor-pointer w-10 h-10 bg-amber-400 rounded-lg flex justify-center items-center opacity-70 hover:opacity-90 transition-all shadow-lg shadow-amber-400/50 hover:scale-105 ${className}`}
             >
                 {children}
             </button>

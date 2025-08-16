@@ -6,5 +6,6 @@ export interface FontOption {
 
 export interface BackgroundOption {
     name: string;
-    color: string;
+    gradient: string;
+    shadowColor: string;
 }
